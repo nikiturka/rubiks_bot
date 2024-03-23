@@ -2,6 +2,7 @@ import time
 import telebot
 from sqlalchemy import select, insert
 from markups import stop_markup, start_markup, repeat_markup, save_markup
+from scramble_generator import generate_scramble
 from src.database import create_tables, session_factory
 from src.models import User, Solve
 
@@ -30,7 +31,13 @@ def start(message):
 
 @bot.message_handler(commands=['scramble'])
 def scramble(message):
-    bot.send_message(message.chat.id, "Нажмите кнопку 'Start', чтобы запустить таймер.", reply_markup=start_markup)
+    generated_scramble = generate_scramble()
+
+    bot.send_message(
+        message.chat.id,
+        f"Ваш скрамбл - {generated_scramble}\nHажмите 'Старт' для запуска секундомера",
+        reply_markup=start_markup
+    )
 
 
 @bot.message_handler(func=lambda message: message.text == "Старт")
