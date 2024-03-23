@@ -17,3 +17,13 @@ class User(Base):
 
     id: Mapped[intpk]
     username: Mapped[str]
+
+
+class Solve(Base):
+    __tablename__ = 'solves'
+
+    id: Mapped[intpk]
+    time: Mapped[float]
+    user: Mapped[str]
+    created_at: Mapped[created_at]
+    scramble: Mapped[str] = mapped_column(nullable=True)
