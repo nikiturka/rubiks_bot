@@ -1,6 +1,10 @@
 import telebot
 
+from src.database import create_tables
+
 bot = telebot.TeleBot("6745385275:AAESHGHgt1wF1zBXtbQPvcJoNAaUQ79TXjU")
+
+create_tables()
 
 
 @bot.message_handler(commands=['start'])
