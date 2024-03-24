@@ -13,4 +13,4 @@ save_markup.add(types.KeyboardButton("Пропустить сборку"))
 
 repeat_markup = types.ReplyKeyboardMarkup()
 repeat_markup.add(types.KeyboardButton("Следующая сборка"))
-repeat_markup.add(types.KeyboardButton("Вернуться в меню"))
+repeat_markup.add(types.KeyboardButton("Выход"))

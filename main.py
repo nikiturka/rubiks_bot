@@ -2,7 +2,7 @@ import time
 from telebot import types
 import telebot
 from sqlalchemy import select, insert
-from markups import stop_markup, start_markup, save_markup
+from markups import stop_markup, start_markup, save_markup, repeat_markup
 from scramble_service import ScrambleService
 from src.database import create_tables, session_factory
 from src.models import User, Solve
@@ -63,7 +63,7 @@ def handle_stop(message, s_time):
 def handle_skip(message):
     solve.clear()
 
-    bot.send_message(message.chat.id, f"Сборка не была сохранена.", reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, f"Сборка не была сохранена.", reply_markup=repeat_markup)
 
 
 @bot.message_handler(func=lambda message: message.text == "Сохранить сборку")
@@ -75,7 +75,17 @@ def handle_save(message):
 
         solve.clear()
 
-        bot.send_message(message.chat.id, f"Сборка успешно сохранена!", reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, f"Сборка успешно сохранена!", reply_markup=repeat_markup)
+
+
+@bot.message_handler(func=lambda message: message.text == "Следующая сборка")
+def repeat_solve(message):
+    scramble(message)
+
+
+@bot.message_handler(func=lambda message: message.text == "Выход")
+def exit_solves(message):
+    bot.send_message(message.chat.id, f"Ладно-ладно :-(", reply_markup=types.ReplyKeyboardRemove())
 
 
 bot.polling(none_stop=True)
