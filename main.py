@@ -3,7 +3,7 @@ from telebot import types
 import telebot
 from sqlalchemy import select, insert
 from markups import stop_markup, start_markup, save_markup, repeat_markup
-from scramble_service import ScrambleService
+from services.scramble_service import ScrambleService
 from src.database import create_tables, session_factory
 from src.models import User, Solve
 
