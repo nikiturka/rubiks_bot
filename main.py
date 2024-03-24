@@ -1,13 +1,14 @@
 import time
+from telebot import types
 import telebot
 from sqlalchemy import select, insert
-from markups import stop_markup, start_markup, repeat_markup, save_markup
-from scramble_generator import generate_scramble
+from markups import stop_markup, start_markup, save_markup
+from scramble_service import ScrambleService
 from src.database import create_tables, session_factory
 from src.models import User, Solve
 
 bot = telebot.TeleBot("6745385275:AAESHGHgt1wF1zBXtbQPvcJoNAaUQ79TXjU")
-
+solve = {}
 create_tables()
 
 
@@ -31,13 +32,16 @@ def start(message):
 
 @bot.message_handler(commands=['scramble'])
 def scramble(message):
-    generated_scramble = generate_scramble()
+    generated_scramble = ScrambleService.generate_scramble()
 
     bot.send_message(
         message.chat.id,
         f"Ваш скрамбл - {generated_scramble}\nHажмите 'Старт' для запуска секундомера",
         reply_markup=start_markup
     )
+
+    solve["scramble"] = generated_scramble
+    solve["user"] = message.from_user.username
 
 
 @bot.message_handler(func=lambda message: message.text == "Старт")
@@ -50,32 +54,28 @@ def handle_start(message):
 @bot.message_handler(func=lambda message: message.text == "Стоп")
 def handle_stop(message, s_time):
     stop_time = time.time() - s_time
+    solve["time"] = f"{stop_time:.2f}"
+
     bot.send_message(message.chat.id, f"Ваше время: {stop_time:.2f} секунд.", reply_markup=save_markup)
-    bot.register_next_step_handler(message, lambda msg: handle_save_or_skip(msg, stop_time))
-
-
-def handle_save_or_skip(message, stop_time):
-    if message.text == "Сохранить сборку":
-        handle_save(message, stop_time)
-    elif message.text == "Пропустить сборку":
-        handle_skip(message)
-    else:
-        bot.send_message(message.chat.id, "Некорректный выбор. Пожалуйста, используйте кнопки для выбора действия.")
 
 
 @bot.message_handler(func=lambda message: message.text == "Пропустить сборку")
 def handle_skip(message):
-    bot.send_message(message.chat.id, f"Сборка не была сохранена.", reply_markup=repeat_markup)
+    solve.clear()
+
+    bot.send_message(message.chat.id, f"Сборка не была сохранена.", reply_markup=types.ReplyKeyboardRemove())
 
 
 @bot.message_handler(func=lambda message: message.text == "Сохранить сборку")
-def handle_save(message, stop_time):
+def handle_save(message):
     with session_factory() as session:
-        stmt = insert(Solve).values(user=message.from_user.username, time=stop_time)
+        stmt = insert(Solve).values(**solve)
         session.execute(stmt)
         session.commit()
 
-        bot.send_message(message.chat.id, f"Сборка успешно сохранена!", reply_markup=repeat_markup)
+        solve.clear()
+
+        bot.send_message(message.chat.id, f"Сборка успешно сохранена!", reply_markup=types.ReplyKeyboardRemove())
 
 
 bot.polling(none_stop=True)
