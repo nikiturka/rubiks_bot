@@ -1,7 +1,7 @@
 import datetime
 from typing import Annotated
 
-from sqlalchemy import text
+from sqlalchemy import text, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
@@ -24,6 +24,6 @@ class Solve(Base):
 
     id: Mapped[intpk]
     time: Mapped[float]
-    user: Mapped[str]
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[created_at]
     scramble: Mapped[str] = mapped_column(nullable=True)

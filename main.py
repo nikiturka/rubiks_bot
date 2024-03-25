@@ -40,8 +40,12 @@ def scramble(message):
         reply_markup=start_markup
     )
 
+    with session_factory() as session:
+        query = select(User).where(User.username == message.from_user.username)
+        user = session.execute(query).scalar()
+
     solve["scramble"] = generated_scramble
-    solve["user"] = message.from_user.username
+    solve["user_id"] = user.id
 
 
 @bot.message_handler(func=lambda message: message.text == "Старт")
