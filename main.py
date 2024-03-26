@@ -25,7 +25,11 @@ def start(message):
             session.execute(stmt)
             session.commit()
 
-        bot.send_message(message.chat.id, f"Привет, я помогу тебе тренироваться в сборке кубика рубика!\nЗайди в меню, чтобы увидеть весь мой функционал.")
+        bot.send_message(
+            message.chat.id,
+            f"Привет, я помогу тебе тренироваться в сборке кубика рубика!\nЗайди в меню, чтобы увидеть весь мой функционал.",
+            reply_markup=types.ReplyKeyboardRemove()
+        )
 
 
 @bot.message_handler(commands=['scramble'])
@@ -52,7 +56,7 @@ def scramble(message):
 @bot.message_handler(func=lambda message: message.text == "Старт")
 def handle_start(message):
     start_time = time.time()
-    bot.send_message(message.chat.id, "Таймер запущен!", reply_markup=stop_markup)
+    bot.send_message(message.chat.id, text="Нажмите стоп, когда завершите свою сборку", reply_markup=stop_markup)
     bot.register_next_step_handler(message, lambda msg: handle_stop(msg, start_time))
 
 
