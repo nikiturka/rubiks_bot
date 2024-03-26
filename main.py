@@ -25,27 +25,28 @@ def start(message):
             session.execute(stmt)
             session.commit()
 
-            bot.send_message(message.chat.id, f"Hello!, {message.from_user.username}")
-        else:
-            bot.send_message(message.chat.id, f"Hello, {user.username}!")
+        bot.send_message(message.chat.id, f"Привет, я помогу тебе тренироваться в сборке кубика рубика!\nЗайди в меню, чтобы увидеть весь мой функционал.")
 
 
 @bot.message_handler(commands=['scramble'])
 def scramble(message):
-    generated_scramble = ScrambleService.generate_scramble()
-
-    bot.send_message(
-        message.chat.id,
-        f"Ваш скрамбл - {generated_scramble}\nHажмите 'Старт' для запуска секундомера",
-        reply_markup=start_markup
-    )
-
     with session_factory() as session:
         query = select(User).where(User.username == message.from_user.username)
         user = session.execute(query).scalar()
 
-    solve["scramble"] = generated_scramble
-    solve["user_id"] = user.id
+    if user:
+        generated_scramble = ScrambleService.generate_scramble()
+
+        bot.send_message(
+            message.chat.id,
+            f"Ваш скрамбл - {generated_scramble}\nHажмите 'Старт' для запуска секундомера",
+            reply_markup=start_markup
+        )
+
+        solve["scramble"] = generated_scramble
+        solve["user_id"] = user.id
+    else:
+        bot.send_message(message.chat.id, f"Хммм... Странно, но тебя нет в моей базе данных. Нажми /start, чтобы продолжить работать со мной")
 
 
 @bot.message_handler(func=lambda message: message.text == "Старт")
@@ -107,9 +108,16 @@ def get_stats(message):
             .group_by(User.username)
         )
 
-        result = session.execute(query)
+        result = session.execute(query).all()
 
-        [bot.send_message(message.chat.id,f"Среднее время сборки: {row[1]}\nВсего сборок: {row[2]}\nЛучшая сборка: {row[3]}") for row in result]
+        if len(result) > 0:
+            [bot.send_message(
+                message.chat.id,
+                f"Среднее время сборки: {round(row[1], 2)}\nВсего сборок: {row[2]}\nЛучшая сборка: {row[3]}",
+                reply_markup=types.ReplyKeyboardRemove()
+            ) for row in result]
+        else:
+            bot.send_message(message.chat.id, "Пока что статистика пустая :-(")
 
 
 bot.polling(none_stop=True)
