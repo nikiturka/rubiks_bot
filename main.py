@@ -1,7 +1,7 @@
 import time
 from telebot import types
 import telebot
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, func
 from markups import stop_markup, start_markup, save_markup, repeat_markup
 from services.scramble_service import ScrambleService
 from src.database import create_tables, session_factory
@@ -90,6 +90,26 @@ def repeat_solve(message):
 @bot.message_handler(func=lambda message: message.text == "Выход")
 def exit_solves(message):
     bot.send_message(message.chat.id, f"Ладно-ладно :-(", reply_markup=types.ReplyKeyboardRemove())
+
+
+@bot.message_handler(commands=['stats'])
+def get_stats(message):
+    with session_factory() as session:
+        query = (
+            select(
+                User.username,
+                func.avg(Solve.time).label('average_solve_time'),
+                func.count(Solve.id).label('solves_total'),
+                func.min(Solve.time).label('best_solve')
+            )
+            .join(Solve, Solve.user_id == User.id)
+            .where(User.username == message.from_user.username)
+            .group_by(User.username)
+        )
+
+        result = session.execute(query)
+
+        [bot.send_message(message.chat.id,f"Среднее время сборки: {row[1]}\nВсего сборок: {row[2]}\nЛучшая сборка: {row[3]}") for row in result]
 
 
 bot.polling(none_stop=True)
