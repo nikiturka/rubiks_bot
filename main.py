@@ -1,3 +1,4 @@
+import os
 import time
 from telebot import types
 import telebot
@@ -7,7 +8,9 @@ from services.scramble_service import ScrambleService
 from src.database import create_tables, session_factory
 from src.models import User, Solve
 
-bot = telebot.TeleBot("6745385275:AAESHGHgt1wF1zBXtbQPvcJoNAaUQ79TXjU")
+TG_TOKEN = os.environ.get("TG_TOKEN")
+
+bot = telebot.TeleBot(TG_TOKEN)
 solve = {}
 create_tables()
 
